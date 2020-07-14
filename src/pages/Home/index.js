@@ -37,7 +37,7 @@ function Home({ amount, addToCartRequest }) {
         ...product,
         priceFormatted: formatPrice(product.price),
       }));
-      setProducts();
+      setProducts(data);
     }
 
     loadProducts();
@@ -68,7 +68,7 @@ function Home({ amount, addToCartRequest }) {
     <Container>
       <FlatList
         data={products}
-        extraData={this.props}
+        // extraData={this.props}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderProduct}
       />
