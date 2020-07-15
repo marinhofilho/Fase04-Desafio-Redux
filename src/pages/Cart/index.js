@@ -1,7 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
 
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as CartActions from '../../store/modules/cart/actions';
@@ -31,13 +29,31 @@ import {
   OrderText,
 } from './styles';
 
-function Cart({ products, removeFromCart, updateAmountRequest, total }) {
+export default function Cart() {
+  const products = useSelector((state) =>
+    state.cart.map((product) => ({
+      ...product,
+      subtotal: formatPrice(product.price * product.amount),
+    }))
+  );
+
+  const totalPrice = useSelector((state) =>
+    formatPrice(
+      state.cart.reduce(
+        (total, product) => total + product.price * product.amount,
+        0
+      )
+    )
+  );
+
+  const dispatch = useDispatch();
+
   function increment(product) {
-    updateAmountRequest(product.id, product.amount + 1);
+    dispatch(CartActions.updateAmountRequest(product.id, product.amount + 1));
   }
 
   function decrement(product) {
-    updateAmountRequest(product.id, product.amount - 1);
+    dispatch(CartActions.updateAmountRequest(product.id, product.amount - 1));
   }
   return (
     <Container>
@@ -52,7 +68,11 @@ function Cart({ products, removeFromCart, updateAmountRequest, total }) {
                     <ProductTitle>{product.title}</ProductTitle>
                     <ProductPrice>{product.priceFormatted}</ProductPrice>
                   </ProductDetails>
-                  <ProductDelete onPress={() => removeFromCart(product.id)}>
+                  <ProductDelete
+                    onPress={() =>
+                      dispatch(CartActions.removeFromCart(product.id))
+                    }
+                  >
                     <Icon
                       name="delete-forever"
                       size={24}
@@ -83,7 +103,7 @@ function Cart({ products, removeFromCart, updateAmountRequest, total }) {
           </Products>
           <TotalContainer>
             <TotalText>TOTAL</TotalText>
-            <TotalAmount>{total}</TotalAmount>
+            <TotalAmount>{totalPrice}</TotalAmount>
             <Order>
               <OrderText>FINALIZAR PEDIDO</OrderText>
             </Order>
@@ -98,32 +118,3 @@ function Cart({ products, removeFromCart, updateAmountRequest, total }) {
     </Container>
   );
 }
-
-Cart.propTypes = {
-  products: PropTypes.shape({
-    id: PropTypes.number,
-    title: PropTypes.string,
-    price: PropTypes.number,
-    image: PropTypes.string,
-  }).isRequired,
-  removeFromCart: PropTypes.func.isRequired,
-  updateAmountRequest: PropTypes.func.isRequired,
-  total: PropTypes.string.isRequired,
-};
-
-const mapStateToProps = (state) => ({
-  products: state.cart.map((product) => ({
-    ...product,
-    subtotal: formatPrice(product.price * product.amount),
-  })),
-  total: formatPrice(
-    state.cart.reduce(
-      (total, product) => total + product.price * product.amount,
-      0
-    )
-  ),
-});
-const mapDispatchToProps = (dispatch) =>
-  bindActionCreators(CartActions, dispatch);
-
-export default connect(mapStateToProps, mapDispatchToProps)(Cart);
